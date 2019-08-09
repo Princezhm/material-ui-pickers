@@ -184,6 +184,7 @@ export const Picker: React.FunctionComponent<PickerProps> = props => {
             shouldDisableDate={shouldDisableDate}
             allowKeyboardControl={allowKeyboardControl}
             loadingIndicator={loadingIndicator}
+            setOpenView={setOpenView}
           />
         )}
 

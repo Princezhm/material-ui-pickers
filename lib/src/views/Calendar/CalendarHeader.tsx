@@ -18,8 +18,11 @@ export interface CalendarHeaderProps {
   rightArrowButtonProps?: Partial<IconButtonProps>;
   disablePrevMonth?: boolean;
   disableNextMonth?: boolean;
-  slideDirection: SlideDirection;
+  slideMonthDirection: SlideDirection;
+  slideYearDirection: SlideDirection;
   onMonthChange: (date: MaterialUiPickersDate, direction: SlideDirection) => void | Promise<void>;
+  onYearChange: (date: MaterialUiPickersDate, direction: SlideDirection) => void | Promise<void>;
+  setOpenView: (view: PickerView) => void;
 }
 
 export const useStyles = makeStyles(
@@ -28,7 +31,8 @@ export const useStyles = makeStyles(
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginTop: theme.spacing(0.5),
+    },
+    lastSwitch: {
       marginBottom: theme.spacing(1),
     },
     transitionContainer: {
@@ -39,6 +43,7 @@ export const useStyles = makeStyles(
     iconButton: {
       zIndex: 1,
       backgroundColor: theme.palette.background.paper,
+      padding: 6,
     },
     daysHeader: {
       display: 'flex',
@@ -52,6 +57,9 @@ export const useStyles = makeStyles(
       textAlign: 'center',
       color: theme.palette.text.hint,
     },
+    clickable: {
+      cursor: 'pointer',
+    },
   }),
   { name: 'MuiPickersCalendarHeader' }
 );
@@ -59,13 +67,16 @@ export const useStyles = makeStyles(
 export const CalendarHeader: React.SFC<CalendarHeaderProps> = ({
   currentMonth,
   onMonthChange,
+  onYearChange,
   leftArrowIcon,
   rightArrowIcon,
   leftArrowButtonProps,
   rightArrowButtonProps,
   disablePrevMonth,
   disableNextMonth,
-  slideDirection,
+  slideMonthDirection,
+  slideYearDirection,
+  setOpenView,
 }) => {
   const utils = useUtils();
   const classes = useStyles();
@@ -73,7 +84,16 @@ export const CalendarHeader: React.SFC<CalendarHeaderProps> = ({
   const rtl = theme.direction === 'rtl';
 
   const selectNextMonth = () => onMonthChange(utils.getNextMonth(currentMonth), 'left');
+
   const selectPreviousMonth = () => onMonthChange(utils.getPreviousMonth(currentMonth), 'right');
+
+  const selectNextYear = () =>
+    onYearChange(utils.setYear(currentMonth, utils.getYear(currentMonth) + 1), 'left');
+
+  const selectPreviousYear = () =>
+    onYearChange(utils.setYear(currentMonth, utils.getYear(currentMonth) - 1), 'right');
+
+  const openYearsSlider = () => setOpenView('year');
 
   return (
     <div>
@@ -88,12 +108,12 @@ export const CalendarHeader: React.SFC<CalendarHeaderProps> = ({
         </IconButton>
 
         <SlideTransition
-          slideDirection={slideDirection}
-          transKey={currentMonth.toString()}
+          slideDirection={slideMonthDirection}
+          transKey={utils.getMonthText(currentMonth)}
           className={classes.transitionContainer}
         >
           <Typography align="center" variant="body1">
-            {utils.getCalendarHeaderText(currentMonth)}
+            {utils.getMonthText(currentMonth)}
           </Typography>
         </SlideTransition>
 
@@ -101,6 +121,40 @@ export const CalendarHeader: React.SFC<CalendarHeaderProps> = ({
           {...rightArrowButtonProps}
           disabled={disableNextMonth}
           onClick={selectNextMonth}
+          className={classes.iconButton}
+        >
+          {rtl ? leftArrowIcon : rightArrowIcon}
+        </IconButton>
+      </div>
+      <div className={`${classes.switchHeader} ${classes.lastSwitch}`}>
+        <IconButton
+          {...leftArrowButtonProps}
+          disabled={disablePrevMonth}
+          onClick={selectPreviousYear}
+          className={classes.iconButton}
+        >
+          {rtl ? rightArrowIcon : leftArrowIcon}
+        </IconButton>
+
+        <SlideTransition
+          slideDirection={slideYearDirection}
+          transKey={utils.getYearText(currentMonth)}
+          className={classes.transitionContainer}
+        >
+          <Typography
+            align="center"
+            variant="body1"
+            onClick={openYearsSlider}
+            className={classes.clickable}
+          >
+            {utils.getYearText(currentMonth)}
+          </Typography>
+        </SlideTransition>
+
+        <IconButton
+          {...rightArrowButtonProps}
+          disabled={disableNextMonth}
+          onClick={selectNextYear}
           className={classes.iconButton}
         >
           {rtl ? leftArrowIcon : rightArrowIcon}
