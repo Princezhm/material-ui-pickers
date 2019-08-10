@@ -44,6 +44,7 @@ export interface OutterCalendarProps {
   shouldDisableDate?: (day: MaterialUiPickersDate) => boolean;
   /** Callback firing on month change. Return promise to render spinner till it will not be resolved @DateIOType */
   onMonthChange?: (date: MaterialUiPickersDate) => void | Promise<void>;
+  onYearChange?: (date: MaterialUiPickersDate) => void | Promise<void>;
   /** Custom loading indicator  */
   loadingIndicator?: JSX.Element;
 }
@@ -67,7 +68,8 @@ export interface CalendarProps
 }
 
 export interface CalendarState {
-  slideDirection: SlideDirection;
+  slideMonthDirection: SlideDirection;
+  slideYearDirection: SlideDirection;
   currentMonth: MaterialUiPickersDate;
   lastDate?: MaterialUiPickersDate;
   loadingQueue: number;
@@ -106,16 +108,23 @@ export class Calendar extends React.Component<CalendarProps, CalendarState> {
       const nextMonth = utils.getMonth(nextDate);
       const lastDate = state.lastDate || nextDate;
       const lastMonth = utils.getMonth(lastDate);
-
+      const nextYear = utils.getYear(nextDate);
+      const lastYear = utils.getYear(lastDate);
       return {
         lastDate: nextDate,
         currentMonth: nextProps.utils.startOfMonth(nextDate),
         // prettier-ignore
-        slideDirection: nextMonth === lastMonth
-          ? state.slideDirection
+        slideMonthDirection: nextMonth === lastMonth
+          ? state.slideMonthDirection
           : utils.isAfterDay(nextDate, lastDate)
             ? 'left'
-            : 'right'
+            : 'right',
+        slideYearDirection:
+          nextYear === lastYear
+            ? state.slideYearDirection
+            : utils.isAfterDay(nextDate, lastDate)
+            ? 'left'
+            : 'right',
       };
     }
 
@@ -123,7 +132,8 @@ export class Calendar extends React.Component<CalendarProps, CalendarState> {
   }
 
   state: CalendarState = {
-    slideDirection: 'left',
+    slideMonthDirection: 'left',
+    slideYearDirection: 'left',
     currentMonth: this.props.utils.startOfMonth(this.props.date),
     loadingQueue: 0,
   };
@@ -157,11 +167,25 @@ export class Calendar extends React.Component<CalendarProps, CalendarState> {
     this.setState({ loadingQueue });
   };
 
-  handleChangeMonth = (newMonth: MaterialUiPickersDate, slideDirection: SlideDirection) => {
-    this.setState({ currentMonth: newMonth, slideDirection });
+  handleChangeMonth = (newMonth: MaterialUiPickersDate, slideMonthDirection: SlideDirection) => {
+    this.setState({ currentMonth: newMonth, slideMonthDirection });
 
     if (this.props.onMonthChange) {
       const returnVal = this.props.onMonthChange(newMonth);
+      if (returnVal) {
+        this.pushToLoadingQueue();
+        returnVal.then(() => {
+          this.popFromLoadingQueue();
+        });
+      }
+    }
+  };
+
+  handleChangeYear = (newYear: MaterialUiPickersDate, slideYearDirection: SlideDirection) => {
+    this.setState({ currentMonth: newYear, slideYearDirection });
+
+    if (this.props.onYearChange) {
+      const returnVal = this.props.onYearChange(newYear);
       if (returnVal) {
         this.pushToLoadingQueue();
         returnVal.then(() => {
@@ -292,7 +316,7 @@ export class Calendar extends React.Component<CalendarProps, CalendarState> {
   };
 
   render() {
-    const { currentMonth, slideDirection } = this.state;
+    const { currentMonth, slideMonthDirection, slideYearDirection } = this.state;
     const {
       classes,
       allowKeyboardControl,
@@ -310,8 +334,10 @@ export class Calendar extends React.Component<CalendarProps, CalendarState> {
 
         <CalendarHeader
           currentMonth={currentMonth!}
-          slideDirection={slideDirection}
+          slideMonthDirection={slideMonthDirection}
+          slideYearDirection={slideYearDirection}
           onMonthChange={this.handleChangeMonth}
+          onYearChange={this.handleChangeYear}
           leftArrowIcon={leftArrowIcon}
           leftArrowButtonProps={leftArrowButtonProps}
           rightArrowIcon={rightArrowIcon}
@@ -321,7 +347,7 @@ export class Calendar extends React.Component<CalendarProps, CalendarState> {
         />
 
         <SlideTransition
-          slideDirection={slideDirection}
+          slideDirection={slideMonthDirection}
           transKey={currentMonth!.toString()}
           className={classes.transitionContainer}
         >
