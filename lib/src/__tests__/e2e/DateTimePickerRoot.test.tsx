@@ -67,6 +67,6 @@ describe('e2e - DateTimePicker', () => {
       .simulate('click');
 
     clickOKButton(component);
-    toHaveBeenCalledExceptMoment(onChangeMock, [utilsToUse.date('2018-01-01T12:00:00.000Z')]);
+    toHaveBeenCalledExceptMoment(onChangeMock, [utilsToUse.date('2018-01-01T00:00:00.000Z')]);
   });
 });
