@@ -1,6 +1,6 @@
 {
-  "name": "@material-ui/pickers",
-  "version": "3.2.5",
+  "name": "@cs-material-ui/pickers",
+  "version": "3.2.6",
   "private": true,
   "description": "React components, that implements material design pickers for material-ui v1",
   "main": "./src/index.ts",
@@ -48,7 +48,7 @@
   },
   "size-limit": [
     {
-      "path": "build/dist/@material-ui/pickers.esm.js",
+      "path": "build/dist/@cs-material-ui/pickers.esm.js",
       "limit": "30 KB"
     }
   ],
